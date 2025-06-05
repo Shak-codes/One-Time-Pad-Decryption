@@ -42,3 +42,11 @@ Python program that programmatically decrypts messages encrypted with a "One-Tim
     - We then store `{ "name": details["name"], "slice": slice_result }` into `xor_slices[outer_key][inner_key]`
 
 ## potential_match
+- Initialize an empty array `results`
+- Iterate through each `outer_key` in `xor_slices`
+  - Initialize `plaintexts` as an empty array and set `p_match` to `True`
+  - For each `inner_key` and `details` in `xor_slices[outer_key].items()`
+    - Let `pt_slice` be the slice of the plaintext when XORing the crib with the XOR'd slice, where `pt_words` is the `split()` of `pt_slice`
+    - Iterate through the potential words in `pt_words`
+      - If the word returns `True` on `valid_string()` for all elements of `pt_words`, then append `True` to `results`. Otherwise append `False`
+- Return the results array
