@@ -31,7 +31,7 @@
         "${workspaceFolder}/WordTrie/WordTrie.cc",
         "${workspaceFolder}/WordTrie/main.cc",
         "-o",
-        "${workspaceFolder}/WordTrie.exe"
+        "${workspaceFolder}/WordTrie/WordTrie.exe"
       ],
       "group": {
         "kind": "build",

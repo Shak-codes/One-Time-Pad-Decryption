@@ -22,18 +22,18 @@ int main() {
       std::string string = input["string"];
       json output;
 
-      if (command == "search" && type == "prefix") {
-        std::vector<int> results = trie.searchPrefix(string);
-        output = results;
-      } else if (command == "search" && type == "suffix") {
-        std::vector<int> results = trie.searchSuffix(string);
-        output = results;
-      } else if (command == "count" && type == "prefix") {
-        int count = trie.countWordsWithPrefix(string);
+      if (command == "count" && type == "prefix") {
+        int count = trie.countPrefix(string);
         output = {{"count", count}};
       } else if (command == "count" && type == "suffix") {
-        int count = trie.countWordsWithSuffix(string);
+        int count = trie.countSuffix(string);
         output = {{"count", count}};
+      } else if (command == "find" && type == "prefix") {
+        std::vector<std::string> result = trie.findByPrefix(string);
+        output = result;
+      } else if (command == "count" && type == "suffix") {
+        std::vector<std::string> result = trie.findBySuffix(string);
+        output = result;
       } else {
         output = {{"error", "Invalid command"}};
       }
