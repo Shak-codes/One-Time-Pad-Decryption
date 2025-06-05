@@ -94,23 +94,65 @@ void WordTrie::insert(int word_index) {
   }
 }
 
-std::vector<int> WordTrie::searchSuffix(const std::string& suffix) const {
+int WordTrie::countSuffix(const std::string& suffix) const {
   Node* current = suffix_root;  // Start at the root of the suffix trie
 
   // Traverse the trie character by character
   for (char c : suffix) {
     if (current->children.find(c) == current->children.end()) {
       // If the character is not found, the suffix does not exist
-      return {};
+      return 0;
     }
     current = current->children[c];
   }
 
   // If we reach the end of the suffix, return the list of word indices
-  return current->word_indices;
+  return current->words_count;
 }
 
-std::vector<int> WordTrie::searchPrefix(const std::string& prefix) const {
+int WordTrie::countPrefix(const std::string& prefix) const {
+  Node* current = prefix_root;  // Start at the root of the prefix trie
+
+  // Traverse the trie character by character
+  for (char c : prefix) {
+    if (current->children.find(c) == current->children.end()) {
+      // If the character is not found, the prefix does not exist
+      return 0;
+    }
+    current = current->children[c];
+  }
+
+  // If we reach the end of the prefix, return the list of word indices
+  return current->words_count;
+}
+
+std::vector<std::string> WordTrie::findBySuffix(const std::string& suffix) const {
+  std::vector<std::string> result;
+  Node* current = suffix_root;  // Start at the root of the prefix trie
+
+  // Traverse the trie character by character
+  for (char c : suffix) {
+    if (current->children.find(c) == current->children.end()) {
+      // If the character is not found, the prefix does not exist
+      return {};
+    }
+    current = current->children[c];
+  }
+
+  // If we reach the end of the prefix, obtain the list of word indices
+  int count = current->words_count;
+  result.reserve(count);
+
+  // Iterate through indices to append words to result
+  for (int idx : current->word_indices) {
+    result.push_back(str_arr[idx]);
+  }
+
+  return result;
+}
+
+std::vector<std::string> WordTrie::findByPrefix(const std::string& prefix) const {
+  std::vector<std::string> result;
   Node* current = prefix_root;  // Start at the root of the prefix trie
 
   // Traverse the trie character by character
@@ -122,38 +164,16 @@ std::vector<int> WordTrie::searchPrefix(const std::string& prefix) const {
     current = current->children[c];
   }
 
-  // If we reach the end of the prefix, return the list of word indices
-  return current->word_indices;
+  // If we reach the end of the prefix, obtain the list of word indices
+  int count = current->words_count;
+  result.reserve(count);
+
+  // Iterate through indices to append words to result
+  for (int idx : current->word_indices) {
+    result.push_back(str_arr[idx]);
+  }
+
+  return result;
 }
 
 const std::vector<std::string>& WordTrie::getStrArr() const { return str_arr; }
-
-int WordTrie::countWordsWithSuffix(const std::string& suffix) const {
-  Node* current = suffix_root;
-
-  // Traverse the trie following the characters of the suffix
-  for (char c : suffix) {
-    if (current->children.find(c) == current->children.end()) {
-      return 0;  // Suffix not found
-    }
-    current = current->children[c];
-  }
-
-  // Return the count of words with this suffix
-  return current->words_count;
-}
-
-int WordTrie::countWordsWithPrefix(const std::string& prefix) const {
-  Node* current = prefix_root;  // Start at the root of the prefix trie
-
-  // Traverse the trie following the characters of the prefix
-  for (char c : prefix) {
-    if (current->children.find(c) == current->children.end()) {
-      return 0;  // Prefix not found
-    }
-    current = current->children[c];
-  }
-
-  // Return the count of words with this prefix
-  return current->words_count;
-}

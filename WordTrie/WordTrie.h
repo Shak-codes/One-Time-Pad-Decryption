@@ -25,13 +25,13 @@ class WordTrie {
   WordTrie(const std::string& file_path);
   ~WordTrie();
 
-  void insert(int word_index);  // Insert the word into both tries
+  void insert(int word_index);
 
-  std::vector<int> searchPrefix(const std::string& prefix) const;
-  std::vector<int> searchSuffix(const std::string& suffix) const;
+  int countPrefix(const std::string& prefix) const;
+  int countSuffix(const std::string& suffix) const;
 
-  int countWordsWithPrefix(const std::string& prefix) const;
-  int countWordsWithSuffix(const std::string& suffix) const;
+  std::vector<std::string> findByPrefix(const std::string& prefix) const;
+  std::vector<std::string> findBySuffix(const std::string& suffix) const;
 
   const std::vector<std::string>& getStrArr() const;
 };
