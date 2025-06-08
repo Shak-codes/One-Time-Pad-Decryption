@@ -150,7 +150,7 @@ int WordTrie::countReverse(const std::string& string) const {
   Node* current = reverse_root;  // Start at the root of the reverse prefix trie
 
   // Traverse the trie character by character (from end to start)
-  for (size_t i = string.size() - 1; i >= 0; --i) {
+  for (int i = string.size() - 1; i >= 0; --i) {
     char c = string[i];
     if (current->children.find(c) == current->children.end()) {
       // If the character is not found, the reversed prefix does not exist

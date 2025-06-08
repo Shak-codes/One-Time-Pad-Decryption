@@ -1,6 +1,7 @@
-from utils import is_printable_ascii, is_wrapped, whitespace_adj
+from utils import is_printable_ascii, whitespace_adj
 import json
 import subprocess
+from pprint import pprint
 
 process = subprocess.Popen(
     "WordTrie/WordTrie.exe",
@@ -216,6 +217,8 @@ def valid_decryption(decrypted_slice, dict):
             return False
         # CASE 3: If only followed by whitespace, check if valid reverse prefix
         elif check_invalid_reverse(substring, follows and not preceeds):
+            if substring.decode("utf-8") == "before":
+                print("Before failed here!")
             return False
         # CASE 4: If wrapped by whitespace, check if word
         elif check_invalid_word(substring, dict, preceeds and follows):
@@ -244,15 +247,18 @@ def potential_match(xor_slices, crib, offset, dict):
         is_valid = True
         decryptions = []
         substrings = []
-        for _, details in slices.items():
+        for ct, details in slices.items():
             decrypted_slice = xor(details["slice"], crib)
-            if crib.decode("utf-8") == "ethical" and is_printable_ascii(decrypted_slice):
-                print("Working with Ethical")
-                print(f"Decrypted slice {decrypted_slice} - {offset}")
+            if crib.decode("utf-8") == "ethical" and offset == 90:
+                pprint(xor_slices)
+                print(f"XOR {ct} with {crib} at offset 90 to obtain...")
+                print(f"Decrypted slice {decrypted_slice.decode("utf-8")}")
             if valid_decryption(decrypted_slice, dict):
                 decryptions.append(decrypted_slice)
                 substrings.append(decrypted_slice.split())
                 continue
+            if crib.decode("utf-8") == "ethical" and offset == 90:
+                print(f"Ethical did not have a valid decryption for `{decrypted_slice.decode("utf-8")}`")
             is_valid = False
             break
         if not is_valid:
