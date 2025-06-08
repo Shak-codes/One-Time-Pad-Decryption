@@ -1,4 +1,4 @@
-from utils import is_printable_ascii
+from utils import is_printable_ascii, is_wrapped
 import json
 import subprocess
 
@@ -36,6 +36,8 @@ def send_command(command, type_, string):
     process.stdin.flush()
 
     response = process.stdout.readline()
+    if command == "count":
+        return json.loads(response)["count"]
     return json.loads(response)
 
 
@@ -149,29 +151,34 @@ def generate_xor_slices(xor_data, offset, crib_len):
     return xor_slices
 
 
+def check_suffix(decrypted_slice, idx, string):
+    string = string.decode("utf-8")
+    return not idx and decrypted_slice[0] != " "\
+        and not send_command("count", "suffix", string)
+
+
+def check_word(decrypted_slice, idx, string, dict):
+    return idx and is_wrapped(decrypted_slice, string)\
+        and not string in dict
+
+
+def check_prefix(string):
+    string = string.decode("utf-8")
+    return not send_command("count", "prefix", string)
+
+
 def valid_decryption(decrypted_slice, dict):
     substrings = decrypted_slice.split()
-    # possible_words = []
     for idx, substring in enumerate(substrings):
         if not is_printable_ascii(substring):
-            return False  # , []
-        if len(substring.decode("utf-8")) == 1:
-            continue
-        start = decrypted_slice.find(substring)
-        end = start + len(substring) - 1
-        if idx == 0 and decrypted_slice[0] != " " and not send_command("count", "suffix", substring.decode("utf-8"))["count"]:
-            return False  # , []
-        elif idx != 0 and decrypted_slice[start-1] == " " and decrypted_slice[end] == " " and not substring in dict:
-            return False  # , []
-        elif not send_command("count", "prefix", substring.decode("utf-8"))["count"]:
-            return False  # , []
-        # if idx > 0:
-        #     possible_words.append(send_command(
-        #         "find", "prefix", substring.decode("utf-8")))
-        # else:
-        #     possible_words.append(send_command(
-        #         "find", "suffix", substring.decode("utf-8")))
-    return True  # , possible_words
+            return False
+        if check_suffix(decrypted_slice, idx, substring):
+            return False
+        elif check_word(decrypted_slice, idx, substring, dict):
+            return False
+        elif check_prefix(substring):
+            return False
+    return True
 
 
 def potential_match(xor_slices, crib, offset, dict):

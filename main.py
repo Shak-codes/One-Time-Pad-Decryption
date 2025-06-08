@@ -74,7 +74,7 @@ def main():
     start_time = time.perf_counter()
     total_matches = 0
 
-    for word_set in words[:-6]:
+    for word_set in words[:-1]:
         splits = split_set(word_set, num_processes)
         with Pool(processes=num_processes) as pool:
             tasks = [

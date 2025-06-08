@@ -114,3 +114,15 @@ def is_printable_ascii(s):
         return False
 
     return True
+
+
+def is_wrapped(decrypted_slice, string):
+    start = decrypted_slice.find(string)
+    end = start + len(string) - 1
+    if (decrypted_slice[start-1] == " " and decrypted_slice[end] == " "):
+        return True
+    return False
+
+
+def is_word(string, dict):
+    return string in dict
