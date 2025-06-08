@@ -11,8 +11,8 @@ def auto_crib_drag(words, xor_data, len_ct, num_ct, dict):
         c. yields complete gibberish.
     """
 
-    labels = generate_xor_labels(xor_data)
     matches = []
+    cribs = set()
 
     for word in sorted(words):
         crib = word.encode("utf-8")
@@ -24,9 +24,11 @@ def auto_crib_drag(words, xor_data, len_ct, num_ct, dict):
 
         for offset in range(max_offset):
             xor_slices = generate_xor_slices(xor_data, offset, crib_len)
-            matches_found = potential_match(xor_slices, crib, offset, dict)
+            matches_found = potential_match(
+                xor_slices, crib, offset, dict)
             for match in matches_found:
                 matches.append(match)
+                cribs.add(match["crib"])
     print("Finished looking for potential matches!")
     print(f"Found {len(matches)} potential matches!")
-    return len(matches)
+    return matches, cribs

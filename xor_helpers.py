@@ -1,9 +1,9 @@
 from utils import is_printable_ascii
-import subprocess
 import json
+import subprocess
 
 process = subprocess.Popen(
-    "WordTrie.exe",
+    "WordTrie/WordTrie.exe",
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE,
@@ -151,16 +151,27 @@ def generate_xor_slices(xor_data, offset, crib_len):
 
 def valid_decryption(decrypted_slice, dict):
     substrings = decrypted_slice.split()
+    # possible_words = []
     for idx, substring in enumerate(substrings):
+        if not is_printable_ascii(substring):
+            return False  # , []
+        if len(substring.decode("utf-8")) == 1:
+            continue
         start = decrypted_slice.find(substring)
         end = start + len(substring) - 1
-        if idx == 0 and decrypted_slice[0] != " " and not send_command("count", "suffix", substring):
-            return False
+        if idx == 0 and decrypted_slice[0] != " " and not send_command("count", "suffix", substring.decode("utf-8"))["count"]:
+            return False  # , []
         elif idx != 0 and decrypted_slice[start-1] == " " and decrypted_slice[end] == " " and not substring in dict:
-            return False
-        elif not send_command("count", "prefix", substring):
-            return False
-    return True
+            return False  # , []
+        elif not send_command("count", "prefix", substring.decode("utf-8"))["count"]:
+            return False  # , []
+        # if idx > 0:
+        #     possible_words.append(send_command(
+        #         "find", "prefix", substring.decode("utf-8")))
+        # else:
+        #     possible_words.append(send_command(
+        #         "find", "suffix", substring.decode("utf-8")))
+    return True  # , possible_words
 
 
 def potential_match(xor_slices, crib, offset, dict):
@@ -190,12 +201,13 @@ def potential_match(xor_slices, crib, offset, dict):
         if not is_valid:
             continue
         results.append({
-            crib: {
-                "plaintext": outer_key,
-                "start": offset,
-                "end": offset+len(crib)
-            }
+            "crib": crib,
+            "plaintext": outer_key,
+            "start": offset,
+            "end": offset+len(crib)
         })
         print(
             f"{crib} is potentially a string in {outer_key} at index [{offset}:{offset+len(crib)}]!")
         print(decryptions)
+
+    return results
