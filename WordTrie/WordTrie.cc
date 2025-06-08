@@ -12,6 +12,7 @@ Node::~Node() {
 WordTrie::WordTrie(const std::string& file_path) {
   prefix_root = new Node();
   suffix_root = new Node();
+  reverse_root = new Node();
 
   // Open the file
   std::ifstream file(file_path);
@@ -40,6 +41,7 @@ WordTrie::WordTrie(const std::string& file_path) {
 WordTrie::~WordTrie() {
   delete prefix_root;
   delete suffix_root;
+  delete reverse_root;
 }
 
 void WordTrie::insert(int word_index) {
@@ -92,6 +94,24 @@ void WordTrie::insert(int word_index) {
     // Increment count for words with this prefix
     current_prefix->words_count++;
   }
+
+  // Inserting into Reverse Prefix Trie
+  Node* current = reverse_root;
+  for (int i = word.size() - 1; i >= 0; --i) {
+    char c = word[i];
+    if (current->children.find(c) == current->children.end()) {
+      current->children[c] = new Node();
+    }
+    current = current->children[c];
+
+    current->word_indices.push_back(word_index);
+    if (current->word_indices.size() > 1 &&
+        current->word_indices[current->word_indices.size() - 1] ==
+            current->word_indices[current->word_indices.size() - 2]) {
+      current->word_indices.pop_back();
+    }
+    current->words_count++;
+  }
 }
 
 int WordTrie::countSuffix(const std::string& suffix) const {
@@ -123,6 +143,23 @@ int WordTrie::countPrefix(const std::string& prefix) const {
   }
 
   // If we reach the end of the prefix, return the list of word indices
+  return current->words_count;
+}
+
+int WordTrie::countReverse(const std::string& string) const {
+  Node* current = reverse_root;  // Start at the root of the reverse prefix trie
+
+  // Traverse the trie character by character (from end to start)
+  for (size_t i = string.size() - 1; i >= 0; --i) {
+    char c = string[i];
+    if (current->children.find(c) == current->children.end()) {
+      // If the character is not found, the reversed prefix does not exist
+      return 0;
+    }
+    current = current->children[c];
+  }
+
+  // If we reach the end of the reversed prefix, return the count
   return current->words_count;
 }
 

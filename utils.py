@@ -118,10 +118,31 @@ def is_printable_ascii(s):
 
 def is_wrapped(decrypted_slice, string):
     start = decrypted_slice.find(string)
-    end = start + len(string) - 1
-    if (decrypted_slice[start-1] == " " and decrypted_slice[end] == " "):
-        return True
-    return False
+    end = start + len(string)
+    # If the start of the string is the first character or the end
+    # of the string is the end of the slice, it is not wrapped
+    if start == 0 or end == len(decrypted_slice):
+        return False
+    return True
+
+
+def whitespace_adj(decrypted_slice, string):
+    start = decrypted_slice.find(string)
+    end = start + len(string)
+    # If start<0 and end is the end of the decrypted_slice, then the
+    # string is not whitespace adjacent
+    if start-1 < 0 and end == len(decrypted_slice):
+        return False, False
+    # If only start<0, check if the end is whitespace or not
+    if start-1 < 0:
+        return False, decrypted_slice[end] == 32
+    # If only end is the end of the decrypted_slice, check if start is
+    # whitespace or not
+    if end == len(decrypted_slice):
+        return decrypted_slice[start-1] == 32, False
+    # If one of decrypted_slice[start-1] or decrypted_slice[end]
+    # equal whitespace, the string is whitespace adjacent
+    return decrypted_slice[start-1] == 32, decrypted_slice[end] == 32
 
 
 def is_word(string, dict):

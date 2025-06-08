@@ -29,6 +29,6 @@ def auto_crib_drag(words, xor_data, len_ct, num_ct, dict):
             for match in matches_found:
                 matches.append(match)
                 cribs.add(match["crib"])
-    print("Finished looking for potential matches!")
-    print(f"Found {len(matches)} potential matches!")
+    # print("Finished looking for potential matches!")
+    # print(f"Found {len(matches)} potential matches!")
     return matches, cribs

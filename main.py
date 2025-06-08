@@ -74,7 +74,7 @@ def main():
     start_time = time.perf_counter()
     total_matches = 0
 
-    for word_set in words[:-1]:
+    for word_set in words[:-4]:
         splits = split_set(word_set, num_processes)
         with Pool(processes=num_processes) as pool:
             tasks = [
@@ -87,24 +87,31 @@ def main():
                 all_matches += matches
                 total_matches += len(matches)
                 crib_matches |= cribs
-            print(f"Found {total_matches} total potential matches!")
-            print(
-                f"We found {len(crib_matches)} unique words as potential matches!")
+            # print(f"Found {total_matches} total potential matches!")
+            # print(
+            #     f"We found {len(crib_matches)} unique words as potential matches!")
         end_time = time.perf_counter()
         print(f"Execution time: {end_time - start_time:.6f} seconds")
 
-    # refined_matches = []
-    # # refine matches
-    # for match in all_matches:
-    #     valid = True
-    #     for words in match["possible_words"]:
-    #         valid = any(word in crib_matches for word in words)
-    #         if not valid:
-    #             break
-    #     if valid:
-    #         refined_matches.append(match)
+    refined_matches = []
+    # refine matches
+    for match in all_matches:
+        keep = True
+        for substrings in match["substrings"]:
+            all_present = all(
+                any(substring in crib for crib in crib_matches)
+                for substring in substrings
+            )
+            if not all_present:
+                keep = False
+                break
+        if keep:
+            refined_matches.append(match)
 
-    # print(f"We have {len(refined_matches)} refined matches!")
+    print(f"We have {len(refined_matches)} refined matches!")
+
+    refined_matches.sort(key=lambda x: x["length"], reverse=True)
+    pprint(refined_matches[:5])
 
 
 if __name__ == "__main__":

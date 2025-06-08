@@ -28,6 +28,9 @@ int main() {
       } else if (command == "count" && type == "suffix") {
         int count = trie.countSuffix(string);
         output = {{"count", count}};
+      } else if (command == "count" && type == "reverse") {
+        int count = trie.countReverse(string);
+        output = {{"count", count}};
       } else if (command == "find" && type == "prefix") {
         std::vector<std::string> result = trie.findByPrefix(string);
         if (result.size() > 50) {

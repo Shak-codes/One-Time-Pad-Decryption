@@ -1,4 +1,4 @@
-from utils import is_printable_ascii, is_wrapped
+from utils import is_printable_ascii, is_wrapped, whitespace_adj
 import json
 import subprocess
 
@@ -151,32 +151,77 @@ def generate_xor_slices(xor_data, offset, crib_len):
     return xor_slices
 
 
-def check_suffix(decrypted_slice, idx, string):
+def check_invalid_suffix(string, porf):
+    if string.decode("utf-8") == "tylos":
+        print("Tylos checking invalid_suffix")
+    # If a whitespace preceeds or follows the string, this is not a suffix
+    if porf:
+        if string.decode("utf-8") == "tylos":
+            print("Tylos is not suffix")
+        return False
+
+    if string.decode("utf-8") == "tylos":
+        print("Tylos is a suffix")
+    # If suffix is invalid, return True
     string = string.decode("utf-8")
-    return not idx and decrypted_slice[0] != " "\
-        and not send_command("count", "suffix", string)
+    return not send_command("count", "suffix", string)
 
 
-def check_word(decrypted_slice, idx, string, dict):
-    return idx and is_wrapped(decrypted_slice, string)\
-        and not string in dict
+def check_invalid_word(string, dict, pandf):
+    if string.decode("utf-8") == "tylos":
+        print("Tylos checking word")
+    # If not wrapped, string is not a word
+    if not pandf:
+        if string.decode("utf-8") == "tylos":
+            print("Tylos is not a word")
+        return False
+    # If word is not present, return True
+    return not string in dict
 
 
-def check_prefix(string):
+def check_invalid_prefix(string, pnotf):
+    if string.decode("utf-8") == "tylos":
+        print("Tylos checking invalid_prefix")
+    # If string is preceeded by whitespace(and not followed), it is a prefix
+    if not pnotf:
+        if string.decode("utf-8") == "tylos":
+            print("Tylos is not prefix")
+        return False
     string = string.decode("utf-8")
     return not send_command("count", "prefix", string)
 
 
+def check_invalid_reverse(string, fnotp):
+    if string.decode("utf-8") == "tylos":
+        print("Tylos checking invalid_reverse")
+    # If string is followed by whitespace(and not preceeded),
+    # it is a reverse prefix
+    if not fnotp:
+        if string.decode("utf-8") == "tylos":
+            print("Tylos is not reverse")
+        return False
+    string = string.decode("utf-8")
+    return not send_command("count", "reverse", string)
+
+
 def valid_decryption(decrypted_slice, dict):
     substrings = decrypted_slice.split()
-    for idx, substring in enumerate(substrings):
+    for substring in substrings:
+        # CASE 1: If string is not printable, decryption is invalid
         if not is_printable_ascii(substring):
             return False
-        if check_suffix(decrypted_slice, idx, substring):
+        preceeds, follows = whitespace_adj(decrypted_slice, substring)
+        # CASE 2: If not preceeded or followed by whitespace, check if valid suffix
+        if check_invalid_suffix(substring, preceeds or follows):
             return False
-        elif check_word(decrypted_slice, idx, substring, dict):
+        # CASE 3: If only followed by whitespace, check if valid reverse prefix
+        elif check_invalid_reverse(substring, follows and not preceeds):
             return False
-        elif check_prefix(substring):
+        # CASE 4: If wrapped by whitespace, check if word
+        elif check_invalid_word(substring, dict, preceeds and follows):
+            return False
+        # CASE 5: If only preceeded by whitespace, check if valid prefix
+        elif check_invalid_prefix(substring, preceeds and not follows):
             return False
     return True
 
@@ -198,23 +243,33 @@ def potential_match(xor_slices, crib, offset, dict):
     for outer_key, slices in xor_slices.items():
         is_valid = True
         decryptions = []
-        for inner_key, details in slices.items():
+        substrings = []
+        for _, details in slices.items():
             decrypted_slice = xor(details["slice"], crib)
+            if crib.decode("utf-8") == "ethical" and is_printable_ascii(decrypted_slice):
+                print("Working with Ethical")
+                print(f"Decrypted slice {decrypted_slice} - {offset}")
             if valid_decryption(decrypted_slice, dict):
                 decryptions.append(decrypted_slice)
+                substrings.append(decrypted_slice.split())
                 continue
             is_valid = False
             break
         if not is_valid:
             continue
+        if crib.decode("utf-8") == "ethical":
+            print("Ethical is being appended")
         results.append({
             "crib": crib,
             "plaintext": outer_key,
             "start": offset,
-            "end": offset+len(crib)
+            "end": offset+len(crib),
+            "substrings": substrings,
+            "length": len(crib),
+            "decryptions": decryptions
         })
-        print(
-            f"{crib} is potentially a string in {outer_key} at index [{offset}:{offset+len(crib)}]!")
-        print(decryptions)
+        # print(
+        #     f"{crib} is potentially a string in {outer_key} at index [{offset}:{offset+len(crib)}]!")
+        # print(decryptions)
 
     return results

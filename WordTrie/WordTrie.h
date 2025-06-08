@@ -19,6 +19,7 @@ class WordTrie {
  private:
   Node* prefix_root;
   Node* suffix_root;
+  Node* reverse_root;
   std::vector<std::string> str_arr;  // Global array of words
 
  public:
@@ -29,6 +30,7 @@ class WordTrie {
 
   int countPrefix(const std::string& prefix) const;
   int countSuffix(const std::string& suffix) const;
+  int countReverse(const std::string& string) const;
 
   std::vector<std::string> findByPrefix(const std::string& prefix) const;
   std::vector<std::string> findBySuffix(const std::string& suffix) const;
