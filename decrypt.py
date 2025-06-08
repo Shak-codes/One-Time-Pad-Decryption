@@ -1,4 +1,4 @@
-from xor_helpers import generate_xor_labels, generate_xor_slices, potential_match
+from xor_helpers import generate_xor_slices, potential_match
 
 
 def auto_crib_drag(words, xor_data, len_ct, num_ct, dict):
@@ -17,6 +17,10 @@ def auto_crib_drag(words, xor_data, len_ct, num_ct, dict):
     for word in sorted(words):
         crib = word.encode("utf-8")
         crib_len = len(crib)
+
+        if crib_len < 3:
+            continue
+
         max_offset = len_ct - crib_len + 1  # +1 since range is exclusive
 
         # # Debugging purposes

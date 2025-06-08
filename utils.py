@@ -33,7 +33,7 @@ def load_words(file_path, previous_words=[]):
                 decoded_line = line.decode('utf-8').strip().lower()
                 seen = any(
                     decoded_line in words_set for words_set in previous_words)
-                if decoded_line and len(decoded_line) > 2 and not seen:
+                if decoded_line and len(decoded_line) > 0 and not seen:
                     words.add(decoded_line)
             except UnicodeDecodeError:
                 continue
