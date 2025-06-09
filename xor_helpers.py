@@ -269,9 +269,12 @@ def potential_match(xor_slices, crib, offset, dict):
         for ct, details in slices.items():
             decrypted_slice = xor(details["slice"], crib)
             log = False
-            if crib.decode("utf-8") == "guidelines" and offset == 98:
+            if crib.decode("utf-8") == "shouldn't" and is_printable_ascii(decrypted_slice):
                 log = True
             if valid_decryption(decrypted_slice, dict, log):
+                if crib.decode("utf-8") == "shouldn't" and is_printable_ascii(decrypted_slice):
+                    print(
+                        f"{crib} has a valid decryption for {decrypted_slice} at offset: {offset}")
                 decryptions.append(decrypted_slice)
                 substrings.append(decrypted_slice.split())
                 continue
@@ -282,6 +285,9 @@ def potential_match(xor_slices, crib, offset, dict):
             break
         if not is_valid:
             continue
+        if log:
+            print(
+                f"{crib} is being appended!")
         results.append({
             "crib": crib,
             "plaintext": outer_key,

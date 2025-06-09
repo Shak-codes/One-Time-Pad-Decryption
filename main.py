@@ -6,10 +6,13 @@ import time
 import os
 import psutil  # type: ignore
 from multiprocessing import Pool
+import string
 
 # Lower the priority of the process
 p = psutil.Process(os.getpid())
 p.nice(psutil.IDLE_PRIORITY_CLASS)  # On Windows
+
+BOUNDARY = bytes(string.whitespace + string.punctuation, "utf-8")
 
 
 def construct_dict():
@@ -99,11 +102,11 @@ def main():
         keep = True
         for substrings in match["substrings"]:
             all_present = all(
-                any(substring in crib for crib in crib_matches)
+                any(substring.rstrip(BOUNDARY) in crib for crib in crib_matches)
                 for substring in substrings
             )
             if not all_present:
-                if match["crib"] == b'grasshopper':
+                if match["crib"] == b"shouldn't":
                     print(f"Refinement failed for the crib {match["crib"]}")
                     print(substrings)
                 keep = False
@@ -114,7 +117,7 @@ def main():
     print(f"We have {len(refined_matches)} refined matches!")
 
     refined_matches.sort(key=lambda x: x["length"], reverse=True)
-    pprint(refined_matches[:5])
+    pprint(refined_matches[:10])
 
 
 if __name__ == "__main__":
