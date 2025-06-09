@@ -103,6 +103,9 @@ def main():
                 for substring in substrings
             )
             if not all_present:
+                if match["crib"] == b'grasshopper':
+                    print(f"Refinement failed for the crib {match["crib"]}")
+                    print(substrings)
                 keep = False
                 break
         if keep:

@@ -1,7 +1,8 @@
-from utils import is_printable_ascii, whitespace_adj
+from utils import is_printable_ascii, boundary_adj
 import json
 import subprocess
 from pprint import pprint
+import string
 
 process = subprocess.Popen(
     "WordTrie/WordTrie.exe",
@@ -13,6 +14,9 @@ process = subprocess.Popen(
 
 # Read and discard the startup message
 process.stdout.readline()
+
+
+BOUNDARY = bytes(string.whitespace + string.punctuation, "utf-8")
 
 
 def send_command(command, type_, string):
@@ -147,82 +151,99 @@ def generate_xor_slices(xor_data, offset, crib_len):
             slice_result = details["result"][offset:offset + crib_len]
             xor_slices[outer_key][inner_key] = {
                 "name": details["name"], "slice": slice_result}
-    # print(xor_slices)
     return xor_slices
 
 
-def check_invalid_suffix(string, porf, prnt):
+def check_invalid_suffix(string, porf, log):
     # If a whitespace preceeds or follows the string, this is not a suffix
     if porf:
+        if log:
+            print(f"{string} is not a suffix")
         return False
     # If suffix is invalid, return True
-    string = string.decode("utf-8")
+    string = string.decode("utf-8").lower()
+    if log:
+        print(f"Checking if {string} is a valid suffix")
     return not send_command("count", "suffix", string)
 
 
-def check_invalid_word(string, dict, pandf, prnt):
+def check_invalid_word(string, dict, pandf, log):
     # If not wrapped, string is not a word
     if not pandf:
-        if string.decode("utf-8") == "we" and prnt:
-            print("we is not a word")
+        if log:
+            print(f"{string} is not a word")
         return False
-    if string.decode("utf-8") == "we" and prnt:
-        print(f"we is a word {string.decode("utf-8") in dict}")
+
+    if log:
+        print(f"Checking if {string} is a valid word")
     # If word is not present, return True
-    return not string.decode("utf-8") in dict
+    return not string.decode("utf-8").lower() in dict
 
 
-def check_invalid_prefix(string, pnotf, prnt):
+def check_invalid_prefix(string, pnotf, log):
     # If string is preceeded by whitespace(and not followed), it is a prefix
     if not pnotf:
-        if string.decode("utf-8") == "st" and prnt:
-            print("st is not preceeded by whitespace")
+        if log:
+            print(f"{string} is not a prefix")
         return False
-    if string.decode("utf-8") == "st" and prnt:
-        print("st is preceeded by whitespace")
-    string = string.decode("utf-8")
+
+    string = string.decode("utf-8").lower()
+    if log:
+        print(f"Checking if {string} is a valid prefix")
     return not send_command("count", "prefix", string)
 
 
-def check_invalid_reverse(string, fnotp, prnt):
+def check_invalid_reverse(string, fnotp, log):
     # If string is followed by whitespace(and not preceeded),
     # it is a reverse prefix
     if not fnotp:
-        if string.decode("utf-8") == "efore" and prnt:
-            print("efore is not followed by whitespace")
+        if log:
+            print(f"{string} is not a reverse prefix")
         return False
 
-    if string.decode("utf-8") == "efore" and prnt:
-        print("efore is followed by whitespace")
-    string = string.decode("utf-8")
+    string = string.decode("utf-8").lower()
+    if log:
+        print(f"Checking if {string} is a valid reverse prefix")
     return not send_command("count", "reverse", string)
 
 
-def valid_decryption(decrypted_slice, dict):
+def valid_decryption(decrypted_slice, dict, log=False):
     substrings = decrypted_slice.split()
-    prnt = False
     # if is_printable_ascii(decrypted_slice) and decrypted_slice.decode("utf-8") == "efore we st":
-    #     prnt = True
     for substring in substrings:
+
         # CASE 1: If string is not printable, decryption is invalid
         if not is_printable_ascii(substring):
             return False
-        preceeds, follows = whitespace_adj(decrypted_slice, substring)
-        if prnt:
-            print(f"{preceeds}, {follows} for {substring} in {decrypted_slice}")
+
+        substring = substring.rstrip(BOUNDARY)
+        preceeds, follows = boundary_adj(decrypted_slice, substring)
+        if log:
+            print(
+                f"preceeds, follows = {preceeds}, {follows} for {substring} in {decrypted_slice}")
+
         # CASE 2: If not preceeded or followed by whitespace, check if valid suffix
-        if check_invalid_suffix(substring, preceeds or follows, prnt):
+        if check_invalid_suffix(substring, preceeds or follows, log):
+            if log:
+                print(f"{substring} failed this check")
             return False
+
         # CASE 3: If only followed by whitespace, check if valid reverse prefix
-        elif check_invalid_reverse(substring, follows and not preceeds, prnt):
-            if substring.decode("utf-8") == "before":
-                print("Before failed here!")
+        elif check_invalid_reverse(substring, follows and not preceeds, log):
+            if log:
+                print(f"{substring} failed this check")
             return False
+
         # CASE 4: If wrapped by whitespace, check if word
-        elif check_invalid_word(substring, dict, preceeds and follows, prnt):
+        elif check_invalid_word(substring, dict, preceeds and follows, log):
+            if log:
+                print(f"{substring} failed this check")
             return False
+
         # CASE 5: If only preceeded by whitespace, check if valid prefix
-        elif check_invalid_prefix(substring, preceeds and not follows, prnt):
+        elif check_invalid_prefix(substring, preceeds and not follows, log):
+            if log:
+                print(f"{substring} failed this check")
             return False
     return True
 
@@ -247,17 +268,16 @@ def potential_match(xor_slices, crib, offset, dict):
         substrings = []
         for ct, details in slices.items():
             decrypted_slice = xor(details["slice"], crib)
-            # if crib.decode("utf-8") == "grasshopper" and offset == 91:
-            #     print(f"XOR {ct} with {crib} at offset 91 to obtain...")
-            #     print(f"Decrypted slice: '{decrypted_slice.decode("utf-8")}'")
-            if valid_decryption(decrypted_slice, dict):
+            log = False
+            if crib.decode("utf-8") == "guidelines" and offset == 98:
+                log = True
+            if valid_decryption(decrypted_slice, dict, log):
                 decryptions.append(decrypted_slice)
                 substrings.append(decrypted_slice.split())
-                # if crib.decode("utf-8") == "grasshopper" and offset == 91:
-                #     print(f"Grasshopper has a valid decryption for '{decrypted_slice.decode("utf-8")}'")
                 continue
-            # if crib.decode("utf-8") == "grasshopper" and offset == 91:
-            #     print(f"Grasshopper did not have a valid decryption for '{decrypted_slice.decode("utf-8")}'")
+            if log:
+                print(
+                    f"{crib} did not have a valid decryption for {decrypted_slice} at offset: {offset}")
             is_valid = False
             break
         if not is_valid:
@@ -271,9 +291,9 @@ def potential_match(xor_slices, crib, offset, dict):
             "length": len(crib),
             "decryptions": decryptions
         })
-        # if crib.decode("utf-8") == "grasshopper":
-        #     print("Grasshopper is being appended")
-        #     print(results)
+        if crib.decode("utf-8") == "guidelines":
+            print("guidelines is being appended")
+            print(results)
         # print(
         #     f"{crib} is potentially a string in {outer_key} at index [{offset}:{offset+len(crib)}]!")
         # print(decryptions)

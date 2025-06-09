@@ -126,23 +126,27 @@ def is_wrapped(decrypted_slice, string):
     return True
 
 
-def whitespace_adj(decrypted_slice, string):
+BOUNDARY = set(string.whitespace + string.punctuation)
+
+
+def boundary_adj(decrypted_slice, string):
     start = decrypted_slice.find(string)
     end = start + len(string)
     # If start<0 and end is the end of the decrypted_slice, then the
-    # string is not whitespace adjacent
-    if start-1 < 0 and end == len(decrypted_slice):
+    # string is not boundary adjacent
+    if start-1 == -1 and end == len(decrypted_slice):
         return False, False
-    # If only start<0, check if the end is whitespace or not
-    if start-1 < 0:
-        return False, decrypted_slice[end] == 32
+    # If only start<0, check if the end is a boundary or not
+    if start-1 == -1:
+        return False, chr(decrypted_slice[end]) in BOUNDARY
     # If only end is the end of the decrypted_slice, check if start is
     # whitespace or not
     if end == len(decrypted_slice):
-        return decrypted_slice[start-1] == 32, False
+        return chr(decrypted_slice[start-1]) in BOUNDARY, False
     # If one of decrypted_slice[start-1] or decrypted_slice[end]
     # equal whitespace, the string is whitespace adjacent
-    return decrypted_slice[start-1] == 32, decrypted_slice[end] == 32
+    return chr(decrypted_slice[start-1]) in BOUNDARY, \
+        chr(decrypted_slice[end]) in BOUNDARY
 
 
 def is_word(string, dict):
